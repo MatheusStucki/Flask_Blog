@@ -6,3 +6,5 @@ CREATE TABLE posts (
     title TEXT NOT NULL,
     content TEXT NOT NULL
 );
+
+ALTER TABLE posts ADD COLUMN quantity INTEGER DEFAULT 0;

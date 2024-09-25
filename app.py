@@ -40,6 +40,14 @@ def add_post():
     flash('Post added successfully!', 'success')
     return redirect(url_for('index'))
 
+@app.route('/update_quantity/<int:post_id>/<int:quantity>', methods=['POST'])
+def update_quantity(post_id, quantity):
+    conn = get_db_connection()
+    conn.execute('UPDATE posts SET quantity = ? WHERE id = ?', (quantity, post_id))
+    conn.commit()
+    conn.close()
+    return '', 204  # No content response
+
 @app.route('/<int:post_id>')
 def post(post_id):
     post = get_post(post_id)
