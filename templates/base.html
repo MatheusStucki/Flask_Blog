@@ -1,87 +1,113 @@
 <!doctype html>
 <html lang="pt-br">
   <head>
-    <!-- Required meta tags -->
+    <!-- Meta tags necessárias -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <!-- Bootstrap CSS -->
+    <!-- CSS do Bootstrap -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="/static/css/style.css">
 
     <title>{% block title %} {% endblock %}</title>
-  </head>
-  <body>
+    </head>
+    <body>
+    <!-- Barra de navegação -->
     <nav class="navbar navbar-expand-md navbar-light bg-light">
-        <a class="navbar-brand" href="{{ url_for('index')}}">FlaskBlog</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav">
-            <li class="nav-item active">
-                <a class="nav-link" href="#">About</a>
-            </li>
-            </ul>
+        <div class="container">
+            <div class="navbar-brand d-flex align-items-center" style="width: 100%;">
+                <label for="file-upload" style="cursor: pointer; position: relative; margin-right: 15px;">
+                    <img id="profile-image"
+                         src="{{ url_for('static', filename=user_settings['pfp_path'] or 'uploads/placeholder.png') }}"
+                         alt="Foto de perfil" class="rounded-circle" style="width: 40px; height: 40px;">
+                    <input type="file" id="file-upload" accept="image/*" style="display: none;" onchange="uploadProfileImage(event)">
+                </label>
+                <a href="{{ url_for('index') }}" class="ml-auto" style="flex-grow: 1; text-align: right; margin-left: auto;">Site Teste</a>
+            </div>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Alternar navegação">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+            </div>
         </div>
     </nav>
     
-    <div class="container mt-4">
-        <div class="row mt-4">
-            {% for post in posts %}
-            <div class="col-md-4">
-                <div class="card mb-4">
-                    <div class="card-body text-center">
-                        <a href="{{ url_for('post', post_id=post['id']) }}" class="card-title" style="text-decoration: none;">
-                            <h5 class="card-title">{{ post['title'] }}</h5>
-                        </a>
-                        <a href="{{ url_for('post', post_id=post['id']) }}">
-                            <img src="https://via.placeholder.com/150" class="card-img-top" alt="Item Image">
-                        </a>
-                        <p class="card-text">{{ post['content'] }}</p>
-                        <div class="mt-3">
-                            <button class="btn btn-secondary" onclick="decreaseQuantity('quantity{{ loop.index }}')">-</button>
-                            <span id="quantity{{ loop.index }}">0</span>
-                            <button class="btn btn-secondary" onclick="increaseQuantity('quantity{{ loop.index }}')">+</button>
+    <!-- Atualizar para mostrar por tempo-->
+    <!-- Área principal de conteúdo com alterações recentes e produtos -->
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- Barra lateral de Alterações Recentes (à esquerda) -->
+            <div class="col-md-2">
+                <h5>Alterações Recentes</h5>
+                <ul class="list-group">
+                    {% for change in recent_changes %}
+                    <li class="list-group-item">
+                        {{ change['message'] }} <!-- Exemplo: "Produto X foi adicionado" -->
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Área principal do produto (centro) -->
+            <div class="col-md-10" >
+                <div class="row mt-4">
+                    {% for post in posts %}
+                    <div class="col-md-2">
+                        <div class="card custom-card mb-4">
+                            <div class="card-body text-center">
+                                <a href="#" class="card-title" style="text-decoration: none;" onclick="editTitle({{ post['id'] }})">
+                                    <h5 id="title{{ loop.index }}" class="custom-card-title">{{ post['title'] }}</h5>
+                                </a>
+                                <input type="text" id="edit-title{{ loop.index }}" class="form-control" style="display:none;" 
+                                       value="{{ post['title'] }}" 
+                                       onblur="saveTitle('{{ post['id']}}' , '{{ loop.index }}')" />
+                                <a href="#">
+                                    <img src="{{ url_for('static', filename=post['image_url'] or 'uploads/placeholder.png') }}" class="card-img-top" 
+                                         alt="Imagem do Item" onclick="uploadImage({{ post['id'] }})">
+                                </a>
+                                <p class="card-text">Em estoque: <span id="quantity{{ loop.index }}">{{ post['quantity'] }}</span></p>
+                                <div class="buttons">
+                                    <button class="btn btn-danger" onclick="decreaseQuantity('quantity{{ loop.index }}')">-</button>
+                                    <button class="btn btn-success" onclick="increaseQuantity('quantity{{ loop.index }}')">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    <!-- Botão para adicionar um novo post -->
+                    <div class="col-md-2">
+                        <div class="text-center mt-4">
+                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addPostModal">
+                                Adicionar Produto
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-            {% endfor %}
-            
-            <!-- Button to add a new post -->
-            <div class="col-md-4">
-                <div class="text-center mt-4">
-                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addPostModal">
-                        Add Post
-                    </button>
-                </div>
-            </div>
         </div>
+    </div>
 
-        <!-- Modal for adding a new post -->
+        <!-- Modal para adicionar um novo post -->
         <div class="modal fade" id="addPostModal" tabindex="-1" role="dialog" aria-labelledby="addPostModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="addPostModalLabel">Add New Post</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <h5 class="modal-title" id="addPostModalLabel">Adicionar Novo Post</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
                     <form action="{{ url_for('add_post') }}" method="POST">
                         <div class="modal-body">
                             <div class="form-group">
-                                <label for="title">Title</label>
+                                <label for="title">Título</label>
                                 <input type="text" class="form-control" id="title" name="title" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="content">Content</label>
-                                <textarea class="form-control" id="content" name="content" required></textarea>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-primary">Add Post</button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">fechar</button>
+                            <button type="submit" class="btn btn-primary">Adicionar produto</button>
                         </div>
                     </form>
                 </div>
@@ -89,25 +115,126 @@
         </div>
     </div>
 
-    <!-- Optional JavaScript -->
-    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <!-- JavaScript opcional -->
+    <!-- jQuery primeiro, depois Popper.js, depois Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
     <script>
+        function editTitle(id) {
+            let titleElement = document.getElementById('title' + id);
+            let inputElement = document.getElementById('edit-title' + id);
+            titleElement.style.display = 'none';
+            inputElement.style.display = 'block';
+            inputElement.focus();
+        }
+
+        function saveTitle(postId, index) {
+            let inputElement = document.getElementById('edit-title' + index);
+            let newTitle = inputElement.value;
+
+            // Enviar atualização para o servidor
+            fetch(`/update_title/${postId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ title: newTitle })
+            }).then(response => {
+                if (response.ok) {
+                    // Atualizar o título na interface
+                    document.getElementById('title' + index).textContent = newTitle;
+                    document.getElementById('title' + index).style.display = 'block';
+                    inputElement.style.display = 'none';
+                }
+            });
+        }
+        // Atualizar para a imagem mudar em tempo real
+        function uploadImage(postId) {
+            // Criar um input de arquivo dinamicamente para fazer upload da imagem
+            let input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = function() {
+                let formData = new FormData();
+                formData.append('file', input.files[0]);
+
+                // Enviar a imagem para o servidor
+                fetch(`/upload_image/${postId}`, {
+                    method: 'POST',
+                    body: formData
+                }).then(response => response.json())
+                .then(data => {
+                    // Atualizar a imagem na página
+                    let imgElement = document.querySelector(`img[onclick="uploadImage(${postId})"]`);
+                    imgElement.src = data.image_url;
+                });
+            };
+            input.click();
+        }
+
         function increaseQuantity(id) {
             let quantityElement = document.getElementById(id);
-            quantityElement.textContent = parseInt(quantityElement.textContent) + 1;
+            let newQuantity = parseInt(quantityElement.textContent) + 1;
+            quantityElement.textContent = newQuantity;
+            updateQuantity(id.split('quantity')[1], newQuantity);
         }
 
         function decreaseQuantity(id) {
             let quantityElement = document.getElementById(id);
             let currentQuantity = parseInt(quantityElement.textContent);
             if (currentQuantity > 0) {
-                quantityElement.textContent = currentQuantity - 1;
+                let newQuantity = currentQuantity - 1;
+                quantityElement.textContent = newQuantity;
+                updateQuantity(id.split('quantity')[1], newQuantity);
             }
         }
+
+        function updateQuantity(postId, quantity) {
+            fetch(`/update_quantity/${postId}/${quantity}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+        }
+
+        function previewImage(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.querySelector('.navbar-brand img').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+        // Isso ta meio bugado ele não esta troca a imagem
+        function uploadProfileImage(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        fetch('/upload_profile_image', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Upload failed');
+
+            return response.json(); 
+        })
+        .then(data => {
+            // Atualiza o image src com uma url nova
+            document.getElementById('profile-image').src = data.image_url;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
     </script>
   </body>
 </html>
