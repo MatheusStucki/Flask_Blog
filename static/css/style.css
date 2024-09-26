@@ -4,3 +4,49 @@ h1 {
     text-align: center;
     padding: 10px;
 }
+
+/* Tamanho personalizado do card */
+.custom-card {
+    max-width: 250px; /* Largura fixa do card */
+    margin: 5px auto 5px; /* Ajusta a margem superior para 25px e inferior para 5px */
+    padding: 10px; /* Preenchimento ao redor do conteúdo */
+    height: 300px; /* Altura fixa para todos os cards */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    border: 1px solid black; /* Adiciona uma borda preta ao redor do card */
+}
+
+/* Imagem do card personalizada */
+.custom-card img {
+    max-height: 150px; /* Ajusta a altura da imagem */
+    width: 100%; /* Faz a imagem ocupar toda a largura */
+    object-fit: cover; /* Garante que a imagem se encaixe sem esticar */
+}
+
+/* Estilo do título do card */
+.custom-card-title {
+    font-size: 1.1em; /* Ajusta o tamanho do título */
+    margin: 10px 0; /* Adiciona um espaço */
+}
+
+/* Texto do card */
+.custom-card p {
+    font-size: 0.9em; /* Tamanho do texto */
+    margin: 5px ; /* Espaço abaixo do texto */
+    flex-grow: 1;
+    text-align: center;
+}
+
+/* Área dos botões */
+.custom-card .buttons {
+    display: flex;
+    justify-content: center;
+    gap: 120px;
+}
+
+.navbar-brand img {
+    vertical-align: middle; /* Aligns the image vertically within the navbar */
+    position: relative; /* Allows for fine-tuning with top/bottom positioning if needed */
+    top: 1px; /* Adjust this value to nudge the image up or down */
+}
