@@ -94,6 +94,7 @@ def upload_image(post_id):
         # Salve o arquivo
         upload_folder = app.config['UPLOAD_FOLDER']
         os.makedirs(upload_folder, exist_ok=True)  # Crie o diretório se não existir
+        # Fazer ele puxar uma copia do arquivo para o diretorio
 
         # Caminho completo para salvar o arquivo
         file_path = os.path.join(upload_folder, filename)
