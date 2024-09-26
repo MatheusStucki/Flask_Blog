@@ -10,7 +10,7 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.secret_key = 'your_secret_key'  # Required for flash messages
+app.secret_key = 'your_secret_key'  # Necessário para mensagens flash
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -42,7 +42,7 @@ def index():
     recent_changes = conn.execute('SELECT * FROM recent_changes ORDER BY timestamp DESC LIMIT 20').fetchall()
     user_settings = conn.execute('SELECT pfp_path FROM settings WHERE id = 1').fetchone()
     conn.close()
-    return render_template('index.html', posts=posts, recent_changes=recent_changes,user_settings=user_settings)
+    return render_template('index.html', posts=posts, recent_changes=recent_changes, user_settings=user_settings)
 
 @app.route('/add', methods=['POST'])
 def add_post():
@@ -52,7 +52,7 @@ def add_post():
     conn.execute('INSERT INTO posts (title) VALUES (?)', (title,))
     conn.commit()
 
-    # Log the addition of the new product
+    # Registre a adição do novo produto
     log_change(f"Product '{title}' was added")
 
     conn.close()
@@ -66,11 +66,11 @@ def update_quantity(post_id, quantity):
     conn.execute('UPDATE posts SET quantity = ? WHERE id = ?', (quantity, post_id))
     conn.commit()
 
-    # Log the change in quantity
+    # Registre a alteração na quantidade
     log_change(f"Product '{post['title']}' quantity updated to {quantity}")
 
     conn.close()
-    return '', 204
+    return '', 204  # Resposta sem conteúdo
 
 @app.route('/update_title/<int:post_id>', methods=['POST'])
 def update_title(post_id):
@@ -79,7 +79,7 @@ def update_title(post_id):
     conn.execute('UPDATE posts SET title = ? WHERE id = ?', (new_title, post_id))
     conn.commit()
     conn.close()
-    return '', 204  # No content response
+    return '', 204  # Resposta sem conteúdo
 
 @app.route('/upload_image/<int:post_id>', methods=['POST'])
 def upload_image(post_id):
@@ -91,16 +91,17 @@ def upload_image(post_id):
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
 
-        # Ensure the upload directory exists
+        # Salve o arquivo
         upload_folder = app.config['UPLOAD_FOLDER']
-        os.makedirs(upload_folder, exist_ok=True)  # Create the directory if it does not exist
+        os.makedirs(upload_folder, exist_ok=True)  # Crie o diretório se não existir
+        # Fazer ele puxar uma copia do arquivo para o diretorio
 
-        # Save the file
-        file_path = os.path.join(upload_folder, filename)  # Full path to save the file
+        # Caminho completo para salvar o arquivo
+        file_path = os.path.join(upload_folder, filename)
         file.save(file_path)
 
-        # Update image URL in the database (store only the relative path)
-        relative_path = f'uploads/{filename}'  # Store the relative path
+        # Atualize a URL da imagem no banco de dados (armazene apenas o caminho relativo)
+        relative_path = f'uploads/{filename}'  # Armazene o caminho relativo
         conn = get_db_connection()
         conn.execute('UPDATE posts SET image_url = ? WHERE id = ?', (relative_path, post_id))
         conn.commit()
@@ -123,13 +124,13 @@ def upload_profile_image():
         os.makedirs(upload_folder, exist_ok=True)
         file.save(os.path.join(upload_folder, filename))
 
-        # Save the path to the database (update the logic as necessary)
+        # Salve o caminho no banco de dados (atualize a lógica conforme necessário)
         conn = get_db_connection()
         conn.execute('UPDATE settings SET pfp_path = ?', (filename,))
         conn.commit()
         conn.close()
 
-        # Return the image URL for updating the frontend
+        # Retorne a URL da imagem para atualizar o frontend
         return 'Profile image uploaded successfully', 200
     else:
         return 'File not allowed', 400
@@ -138,4 +139,3 @@ def upload_profile_image():
 def post(post_id):
     post = get_post(post_id)
     return render_template('post.html', post=post)
-

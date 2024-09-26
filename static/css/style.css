@@ -8,7 +8,7 @@ h1 {
 /* Tamanho personalizado do card */
 .custom-card {
     max-width: 250px; /* Largura fixa do card */
-    margin: 5px auto 5px; /* Ajusta a margem superior para 25px e inferior para 5px */
+    margin: 5px auto 5px; /* Ajusta a margem superior para 5px e inferior para 5px */
     padding: 10px; /* Preenchimento ao redor do conteúdo */
     height: 300px; /* Altura fixa para todos os cards */
     display: flex;
@@ -33,7 +33,7 @@ h1 {
 /* Texto do card */
 .custom-card p {
     font-size: 0.9em; /* Tamanho do texto */
-    margin: 5px ; /* Espaço abaixo do texto */
+    margin: 5px; /* Espaço abaixo do texto */
     flex-grow: 1;
     text-align: center;
 }
@@ -42,11 +42,11 @@ h1 {
 .custom-card .buttons {
     display: flex;
     justify-content: center;
-    gap: 120px;
+    gap: 120px; /* Espaçamento entre os botões */
 }
 
 .navbar-brand img {
-    vertical-align: middle; /* Aligns the image vertically within the navbar */
-    position: relative; /* Allows for fine-tuning with top/bottom positioning if needed */
-    top: 1px; /* Adjust this value to nudge the image up or down */
+    vertical-align: middle; /* Alinha a imagem verticalmente dentro da barra de navegação */
+    position: relative; /* Permite ajuste fino com posicionamento superior/inferior, se necessário */
+    top: 1px; /* Ajuste este valor para mover a imagem para cima ou para baixo */
 }

@@ -28,14 +28,11 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-                <ul class="navbar-nav">
-                    <!-- Outros itens da barra de navegação podem ir aqui -->
-                </ul>
             </div>
         </div>
     </nav>
     
-
+    <!-- Atualizar para mostrar por tempo-->
     <!-- Área principal de conteúdo com alterações recentes e produtos -->
     <div class="container-fluid mt-4">
         <div class="row">
@@ -153,7 +150,7 @@
                 }
             });
         }
-
+        // Atualizar para a imagem mudar em tempo real
         function uploadImage(postId) {
             // Criar um input de arquivo dinamicamente para fazer upload da imagem
             let input = document.createElement('input');
@@ -181,16 +178,15 @@
             let quantityElement = document.getElementById(id);
             let newQuantity = parseInt(quantityElement.textContent) + 1;
             quantityElement.textContent = newQuantity;
-            // Enviar atualização para o servidor
             updateQuantity(id.split('quantity')[1], newQuantity);
         }
+
         function decreaseQuantity(id) {
             let quantityElement = document.getElementById(id);
             let currentQuantity = parseInt(quantityElement.textContent);
             if (currentQuantity > 0) {
                 let newQuantity = currentQuantity - 1;
                 quantityElement.textContent = newQuantity;
-                // Send update to server
                 updateQuantity(id.split('quantity')[1], newQuantity);
             }
         }
@@ -209,13 +205,12 @@
         if (file) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                // Update the src of the image to the new image
                 document.querySelector('.navbar-brand img').src = e.target.result;
             };
             reader.readAsDataURL(file);
         }
     }
-
+        // Isso ta meio bugado ele não esta troca a imagem
         function uploadProfileImage(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -230,10 +225,10 @@
         .then(response => {
             if (!response.ok) throw new Error('Upload failed');
 
-            return response.json(); // Expecting JSON response with image URL
+            return response.json(); 
         })
         .then(data => {
-            // Update the image src with the new image URL
+            // Atualiza o image src com uma url nova
             document.getElementById('profile-image').src = data.image_url;
         })
         .catch(error => {
