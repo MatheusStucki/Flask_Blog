@@ -13,7 +13,7 @@
     </head>
     <body>
     <!-- Barra de navegação -->
-    <nav class="navbar navbar-expand-md navbar-light bg-light">
+    <nav class="navbar bg-primary" data-bs-theme="dark">
         <div class="container">
             <div class="navbar-brand d-flex align-items-center" style="width: 100%;">
                 <label for="file-upload" style="cursor: pointer; position: relative; margin-right: 15px;">
@@ -22,7 +22,7 @@
                          alt="Foto de perfil" class="rounded-circle" style="width: 40px; height: 40px;">
                     <input type="file" id="file-upload" accept="image/*" style="display: none;" onchange="uploadProfileImage(event)">
                 </label>
-                <a href="{{ url_for('index') }}" class="ml-auto" style="flex-grow: 1; text-align: right; margin-left: auto;">Site Teste</a>
+                <a href="{{ url_for('index') }}" class="ml-auto" style="flex-grow: 1; text-align: right; margin-left: auto; color: black;">Site Teste</a>
             </div>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Alternar navegação">
                 <span class="navbar-toggler-icon"></span>
