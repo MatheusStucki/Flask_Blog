@@ -2,11 +2,17 @@ import sqlite3
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify 
 from werkzeug.exceptions import abort
 from werkzeug.utils import secure_filename
+from dotenv import load_dotenv
 import os
 
 # Defina o caminho da pasta para salvar as imagens
 UPLOAD_FOLDER = 'static/uploads/'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+load_dotenv()  # This loads the .env file
+
+# Now you can access environment variables as usual
+secret_key = os.getenv('SECRET_KEY')
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -40,37 +46,89 @@ def index():
     conn = get_db_connection()
     posts = conn.execute('SELECT * FROM posts').fetchall()
     recent_changes = conn.execute('SELECT * FROM recent_changes ORDER BY timestamp DESC LIMIT 20').fetchall()
-    user_settings = conn.execute('SELECT pfp_path FROM settings WHERE id = 1').fetchone()
+    settings = conn.execute('SELECT * FROM settings WHERE id = 1').fetchone()
     conn.close()
-    return render_template('index.html', posts=posts, recent_changes=recent_changes, user_settings=user_settings)
+    return render_template('index.html', posts=posts, recent_changes=recent_changes, settings=settings)
 
-@app.route('/add', methods=['POST'])
+@app.route('/add', methods=['POST']) 
 def add_post():
+    conn = get_db_connection()
+    
+    # Find the lowest available ID or the highest ID + 1 if no gaps
+    next_id = conn.execute('''
+        SELECT MIN(t1.id + 1) AS next_id
+        FROM posts t1
+        LEFT JOIN posts t2 ON t1.id + 1 = t2.id
+        WHERE t2.id IS NULL
+    ''').fetchone()['next_id']
+
+    # If no gaps, use max(id) + 1
+    if not next_id:
+        next_id = conn.execute('SELECT IFNULL(MAX(id), 0) + 1 FROM posts').fetchone()[0]
+    
+    # Create the new post (data should come from request)
     title = request.form['title']
 
-    conn = get_db_connection()
-    conn.execute('INSERT INTO posts (title) VALUES (?)', (title,))
+    conn.execute('INSERT INTO posts (id, title) VALUES (?, ?)',
+                 (next_id, title))
     conn.commit()
-
-    # Registre a adição do novo produto
-    log_change(f"Product '{title}' was added")
-
     conn.close()
-    flash('Post added successfully!', 'success')
+
+    log_change(f"Produto {title} foi adicionado")
+
     return redirect(url_for('index'))
+
+@app.route('/delete_post', methods=['POST'])
+def delete_post():
+    conn = get_db_connection()
+    
+    # Get the post ID from the form
+    post_id = request.form.get('post_id')
+    
+    if not post_id:
+        return "Post ID is required!", 400
+    
+    # Delete the post with the given ID
+    conn.execute('DELETE FROM posts WHERE id = ?', (post_id,))
+    conn.commit()
+    conn.close()
+
+    log_change(f"Produto Deletado com sucesso")
+    flash('Post deleted successfully!', 'success')
+    return redirect(url_for('index'))
+
 
 @app.route('/update_quantity/<int:post_id>/<int:quantity>', methods=['POST'])
 def update_quantity(post_id, quantity):
     conn = get_db_connection()
+    
+    # Fetch the post and its current max_quantity
     post = conn.execute('SELECT * FROM posts WHERE id = ?', (post_id,)).fetchone()
-    conn.execute('UPDATE posts SET quantity = ? WHERE id = ?', (quantity, post_id))
+    
+    if not post:
+        conn.close()
+        return "Post not found", 404  # Return 404 if the post doesn't exist
+
+    # Get the current max_quantity from the post
+    max_quantity = post['max_quantity']
+
+    # Update max_quantity if the new quantity is greater than the current max
+    if quantity > max_quantity:
+        max_quantity = quantity
+
+    # Update the quantity and possibly the max_quantity in the database
+    conn.execute('UPDATE posts SET quantity = ?, max_quantity = ? WHERE id = ?',
+                 (quantity, max_quantity, post_id))
     conn.commit()
 
-    # Registre a alteração na quantidade
+    # Log the change
     log_change(f"Product '{post['title']}' quantity updated to {quantity}")
 
     conn.close()
-    return '', 204  # Resposta sem conteúdo
+
+    # Return the updated max_quantity to the client
+    return {'max_quantity': max_quantity}, 200  # Return JSON with max_quantity
+
 
 @app.route('/update_title/<int:post_id>', methods=['POST'])
 def update_title(post_id):
@@ -84,32 +142,45 @@ def update_title(post_id):
 @app.route('/upload_image/<int:post_id>', methods=['POST'])
 def upload_image(post_id):
     if 'file' not in request.files:
-        return 'No file part', 400
+        return jsonify({'error': 'No file part'}), 400
     file = request.files['file']
     if file.filename == '':
-        return 'No selected file', 400
+        return jsonify({'error': 'No selected file'}), 400
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
 
-        # Salve o arquivo
+        # Save the file
         upload_folder = app.config['UPLOAD_FOLDER']
-        os.makedirs(upload_folder, exist_ok=True)  # Crie o diretório se não existir
-        # Fazer ele puxar uma copia do arquivo para o diretorio
+        os.makedirs(upload_folder, exist_ok=True)  # Create the directory if it doesn't exist
 
-        # Caminho completo para salvar o arquivo
+        # Complete path to save the file
         file_path = os.path.join(upload_folder, filename)
         file.save(file_path)
 
-        # Atualize a URL da imagem no banco de dados (armazene apenas o caminho relativo)
-        relative_path = f'uploads/{filename}'  # Armazene o caminho relativo
+        # Store relative path in the database
+        relative_path = f'uploads/{filename}'
         conn = get_db_connection()
         conn.execute('UPDATE posts SET image_url = ? WHERE id = ?', (relative_path, post_id))
         conn.commit()
         conn.close()
 
-        return 'Image uploaded successfully', 200
+        # Return the new image URL in JSON format
+        return jsonify({'image_url': url_for('static', filename=relative_path)}), 200
     else:
-        return 'File not allowed', 400
+        return jsonify({'error': 'File not allowed'}), 400
+
+@app.route('/update_site_name', methods=['POST'])
+def update_site_name():
+    data = request.get_json()
+    site_name = data.get('site_name')
+
+    conn = get_db_connection()
+    conn.execute('UPDATE settings SET site_name = ? WHERE id = 1', (site_name,))  # Assuming there is only one settings record
+    conn.commit()
+    conn.close()
+
+    return 'Site name updated successfully', 200
+
 
 @app.route('/upload_profile_image', methods=['POST'])
 def upload_profile_image():
@@ -124,18 +195,22 @@ def upload_profile_image():
         os.makedirs(upload_folder, exist_ok=True)
         file.save(os.path.join(upload_folder, filename))
 
-        # Salve o caminho no banco de dados (atualize a lógica conforme necessário)
+        # Save the path in the database
         conn = get_db_connection()
-        conn.execute('UPDATE settings SET pfp_path = ?', (filename,))
+        relative_path = f'uploads/{filename}'
+        conn.execute('UPDATE settings SET pfp_path = ? WHERE id = 1', ((relative_path,)))  # Assuming there is only one settings record
         conn.commit()
         conn.close()
 
-        # Retorne a URL da imagem para atualizar o frontend
-        return 'Profile image uploaded successfully', 200
+        return jsonify({'image_url': url_for('static', filename=relative_path)}), 200
     else:
-        return 'File not allowed', 400
-    
+        return jsonify({'error': 'File not allowed'}), 400
+
+
 @app.route('/<int:post_id>')
 def post(post_id):
     post = get_post(post_id)
     return render_template('post.html', post=post)
+
+if __name__ == '__main__':
+    app.run()

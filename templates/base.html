@@ -18,11 +18,12 @@
             <div class="navbar-brand d-flex align-items-center" style="width: 100%;">
                 <label for="file-upload" style="cursor: pointer; position: relative; margin-right: 15px;">
                     <img id="profile-image"
-                         src="{{ url_for('static', filename=user_settings['pfp_path'] or 'uploads/placeholder.png') }}"
-                         alt="Foto de perfil" class="rounded-circle" style="width: 40px; height: 40px;">
+                        src="{{ url_for('static', filename=settings['pfp_path'] or 'uploads/placeholder.jpeg') }}"
+                        alt="Foto de perfil" class="rounded-circle" style="width: 40px; height: 40px;">
                     <input type="file" id="file-upload" accept="image/*" style="display: none;" onchange="uploadProfileImage(event)">
                 </label>
-                <a href="{{ url_for('index') }}" class="ml-auto" style="flex-grow: 1; text-align: right; margin-left: auto; color: black;">Site Teste</a>
+                <input type="text" id="site-name" value="{{ settings['site_name'] }}" onchange="updateSiteName()" style="border: none; background: transparent; color: white; flex-grow: 1;"/>
+                <button onclick="updateSiteName()" class="btn btn-link text-white">Save</button> <!-- Add a button to save changes -->
             </div>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Alternar navegação">
                 <span class="navbar-toggler-icon"></span>
@@ -31,6 +32,7 @@
             </div>
         </div>
     </nav>
+
     
     <!-- Atualizar para mostrar por tempo-->
     <!-- Área principal de conteúdo com alterações recentes e produtos -->
@@ -49,21 +51,29 @@
             </div>
 
             <!-- Área principal do produto (centro) -->
-            <div class="col-md-10" >
+            <div class="col-md-10">
                 <div class="row mt-4">
                     {% for post in posts %}
                     <div class="col-md-2">
-                        <div class="card custom-card mb-4">
+                        <div class="card custom-card mb-4
+                            {% if post['quantity'] <= 0 %}
+                                card-red
+                            {% elif post['quantity'] <= post['max_quantity'] / 2 %}
+                                card-yellow
+                            {% else %}
+                                card-green
+                            {% endif %}
+                        " data-post-id="{{ post['id'] }}">
                             <div class="card-body text-center">
                                 <a href="#" class="card-title" style="text-decoration: none;" onclick="editTitle({{ post['id'] }})">
                                     <h5 id="title{{ loop.index }}" class="custom-card-title">{{ post['title'] }}</h5>
                                 </a>
                                 <input type="text" id="edit-title{{ loop.index }}" class="form-control" style="display:none;" 
-                                       value="{{ post['title'] }}" 
-                                       onblur="saveTitle('{{ post['id']}}' , '{{ loop.index }}')" />
+                                    value="{{ post['title'] }}" 
+                                    onblur="saveTitle('{{ post['id']}}' , '{{ loop.index }}')" />
                                 <a href="#">
-                                    <img src="{{ url_for('static', filename=post['image_url'] or 'uploads/placeholder.png') }}" class="card-img-top" 
-                                         alt="Imagem do Item" onclick="uploadImage({{ post['id'] }})">
+                                    <img src="{{ url_for('static', filename=post['image_url'] or 'uploads/placeholder.jpeg') }}" class="card-img-top" 
+                                        alt="Imagem do Item" onclick="uploadImage({{ post['id'] }})">
                                 </a>
                                 <p class="card-text">Em estoque: <span id="quantity{{ loop.index }}">{{ post['quantity'] }}</span></p>
                                 <div class="buttons">
@@ -75,12 +85,17 @@
                     </div>
                     {% endfor %}
                     
-                    <!-- Botão para adicionar um novo post -->
-                    <div class="col-md-2">
-                        <div class="text-center mt-4">
-                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addPostModal">
-                                Adicionar Produto
-                            </button>
+                            <!-- Botão para adicionar um novo post -->
+                            <div class="col-md-2">
+                                <div class="text-center mt-4">
+                                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addPostModal">
+                                        Adicionar Produto
+                                    </button>
+                                    <button type="button" class="btn btn-danger mt-2" data-toggle="modal" data-target="#removePostModal" onclick="setMostRecentPostId()">
+                                        Deletar
+                                    </button>
+                                </div>
+                            </div>                           
                         </div>
                     </div>
                 </div>
@@ -115,6 +130,33 @@
         </div>
     </div>
 
+        <!-- Modal para apagar um post -->
+        <div class="modal fade" id="removePostModal" tabindex="-1" role="dialog" aria-labelledby="removePostModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="removePostModalLabel">Tem certeza que deseja apagar o post?</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Cancelar">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form action="{{ url_for('delete_post') }}" method="POST">
+                        <div class="modal-body">
+                            <!-- Hidden input for the post ID -->
+                            <input type="hidden" id="post_id" name="post_id">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                            <button type="submit" class="btn btn-danger">Apagar Post</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+                    
+
+
     <!-- JavaScript opcional -->
     <!-- jQuery primeiro, depois Popper.js, depois Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
@@ -122,6 +164,32 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
     <script>
+        function updateSiteName() {
+            const siteName = document.getElementById('site-name').value;
+
+            fetch('/update_site_name', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ site_name: siteName }),
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Site name updated successfully');
+                } else {
+                    alert('Failed to update site name');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function setDeletePostId(postId) {
+            // Set the post ID in the hidden input field inside the delete modal
+            document.getElementById('post_id').value = postId;
+        }
         function editTitle(id) {
             let titleElement = document.getElementById('title' + id);
             let inputElement = document.getElementById('edit-title' + id);
@@ -152,25 +220,38 @@
         }
         // Atualizar para a imagem mudar em tempo real
         function uploadImage(postId) {
-            // Criar um input de arquivo dinamicamente para fazer upload da imagem
+            // Create a file input element dynamically for uploading the image
             let input = document.createElement('input');
             input.type = 'file';
             input.accept = 'image/*';
+
+            // Trigger when the user selects a file
             input.onchange = function() {
                 let formData = new FormData();
                 formData.append('file', input.files[0]);
 
-                // Enviar a imagem para o servidor
+                // Send the image to the server via fetch API
                 fetch(`/upload_image/${postId}`, {
                     method: 'POST',
                     body: formData
-                }).then(response => response.json())
+                })
+                .then(response => response.json())  // Parse JSON response
                 .then(data => {
-                    // Atualizar a imagem na página
-                    let imgElement = document.querySelector(`img[onclick="uploadImage(${postId})"]`);
-                    imgElement.src = data.image_url;
-                });
+                    if (data.image_url) {
+                        // Update the image source on the page in real time
+                        let imgElement = document.querySelector(`img[onclick="uploadImage(${postId})"]`);
+                        imgElement.src = data.image_url;  // Update the image URL
+
+                        // Optionally add a cache buster to avoid browser caching issues
+                        imgElement.src = data.image_url + '?t=' + new Date().getTime();
+                    } else {
+                        console.error('Error:', data.error);  // Handle error if any
+                    }
+                })
+                .catch(error => console.error('Error uploading image:', error));
             };
+
+            // Open file dialog to upload an image
             input.click();
         }
 
@@ -191,50 +272,87 @@
             }
         }
 
+        // Updating quantity and changing color live
         function updateQuantity(postId, quantity) {
             fetch(`/update_quantity/${postId}/${quantity}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-            });
+            })
+            .then(response => response.json())  // Parse the JSON response
+            .then(data => {
+                const maxQuantity = data.max_quantity;  // Get the max_quantity from the server
+                const halfMaxQuantity = maxQuantity / 2;
+
+                // Update the displayed quantity
+                const quantityElement = document.querySelector(`#quantity${postId}`);
+                quantityElement.textContent = quantity;
+
+                // Get the card element and update its color based on the new quantity
+                const card = document.querySelector(`div.card[data-post-id='${postId}']`);
+
+                if (quantity <= 0) {
+                    card.classList.remove('card-yellow', 'card-green');
+                    card.classList.add('card-red');
+                } else if (quantity <= halfMaxQuantity) {
+                    card.classList.remove('card-red', 'card-green');
+                    card.classList.add('card-yellow');
+                } else {
+                    card.classList.remove('card-red', 'card-yellow');
+                    card.classList.add('card-green');
+                }
+            })
+            .catch(error => console.error('Error updating quantity:', error));
         }
+
 
         function previewImage(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.querySelector('.navbar-brand img').src = e.target.result;
-            };
-            reader.readAsDataURL(file);
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.querySelector('.navbar-brand img').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
         }
-    }
-        // Isso ta meio bugado ele não esta troca a imagem
+
+        // Fix for profile image upload live update
         function uploadProfileImage(event) {
-        const file = event.target.files[0];
-        if (!file) return;
+            const file = event.target.files[0];
+            if (!file) return;
 
-        const formData = new FormData();
-        formData.append('file', file);
+            const formData = new FormData();
+            formData.append('file', file);
 
-        fetch('/upload_profile_image', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => {
-            if (!response.ok) throw new Error('Upload failed');
+            fetch('/upload_profile_image', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json()) // Expect JSON with image URL
+            .then(data => {
+                // Update image src with the new URL from the response
+                document.getElementById('profile-image').src = data.image_url;
+            })
+            .catch(error => {
+                console.error('Error uploading profile image:', error);
+            });
+        }
+        function setMostRecentPostId() {
+            const posts = document.querySelectorAll('.custom-card'); // Select all post cards
+            if (posts.length > 0) {
+                const mostRecentPost = posts[posts.length - 1]; // Get the most recent post card
+                const postId = mostRecentPost.getAttribute('data-post-id'); // Get the post ID
+                const postTitle = mostRecentPost.querySelector('.custom-card-title').textContent; // Get the post title
 
-            return response.json(); 
-        })
-        .then(data => {
-            // Atualiza o image src com uma url nova
-            document.getElementById('profile-image').src = data.image_url;
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
-    }
+                document.getElementById('post_id').value = postId; // Set the post ID in the hidden input field
+                document.getElementById('title').value = postTitle; // Set the post title in the input field
+            }
+        }
+
+
+
     </script>
   </body>
 </html>

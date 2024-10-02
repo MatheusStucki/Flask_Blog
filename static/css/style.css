@@ -8,26 +8,28 @@ h1 {
 /* Tamanho personalizado do card */
 .custom-card {
     max-width: 250px; /* Largura fixa do card */
-    margin: 5px auto 5px; /* Ajusta a margem superior para 5px e inferior para 5px */
+    margin: 5px auto; /* Ajusta a margem superior e inferior para 5px */
     padding: 10px; /* Preenchimento ao redor do conteúdo */
     height: 300px; /* Altura fixa para todos os cards */
     display: flex;
     flex-direction: column;
-    justify-content: space-around;
+    justify-content: center; /* Center content vertically */
+    align-items: center; /* Center content horizontally */
     border: 1px solid black; /* Adiciona uma borda preta ao redor do card */
 }
 
 /* Imagem do card personalizada */
 .custom-card img {
-    max-height: 150px; /* Ajusta a altura da imagem */
-    width: 100%; /* Faz a imagem ocupar toda a largura */
-    object-fit: cover; /* Garante que a imagem se encaixe sem esticar */
+    width: 150px;          /* Set a fixed width of 150 pixels */
+    height: 150px;         /* Set a fixed height of 150 pixels */
+    object-fit: cover;     /* Maintain aspect ratio, filling the area */
 }
 
 /* Estilo do título do card */
 .custom-card-title {
     font-size: 1.1em; /* Ajusta o tamanho do título */
     margin: 10px 0; /* Adiciona um espaço */
+    text-align: center; /* Center the text */
 }
 
 /* Texto do card */
@@ -35,18 +37,32 @@ h1 {
     font-size: 0.9em; /* Tamanho do texto */
     margin: 5px; /* Espaço abaixo do texto */
     flex-grow: 1;
-    text-align: center;
+    text-align: center; /* Center the text */
 }
 
 /* Área dos botões */
 .custom-card .buttons {
     display: flex;
     justify-content: center;
-    gap: 120px; /* Espaçamento entre os botões */
+    gap: 120px; /* Ajuste o espaço entre os botões */
+    margin-top: 10px; /* Espaço acima dos botões */
+    margin-bottom: 10px; /* Espaço abaixo dos botões */
 }
 
 .navbar-brand img {
     vertical-align: middle; /* Alinha a imagem verticalmente dentro da barra de navegação */
     position: relative; /* Permite ajuste fino com posicionamento superior/inferior, se necessário */
     top: 1px; /* Ajuste este valor para mover a imagem para cima ou para baixo */
+}
+
+.card-red {
+    background-color: red;
+}
+
+.card-yellow {
+    background-color: yellow;
+}
+
+.card-green {
+    background-color: green;
 }
