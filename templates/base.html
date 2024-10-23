@@ -23,7 +23,6 @@
                     <input type="file" id="file-upload" accept="image/*" style="display: none;" onchange="uploadProfileImage(event)">
                 </label>
                 <input type="text" id="site-name" value="{{ settings['site_name'] }}" onchange="updateSiteName()" style="border: none; background: transparent; color: white; flex-grow: 1;"/>
-                <button onclick="updateSiteName()" class="btn btn-link text-white">Save</button> <!-- Add a button to save changes -->
             </div>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Alternar navegação">
                 <span class="navbar-toggler-icon"></span>
@@ -65,6 +64,9 @@
                             {% endif %}
                         " data-post-id="{{ post['id'] }}">
                             <div class="card-body text-center">
+                                <button type="button" class="btn btn-danger mt-2" data-toggle="modal" data-target="#removePostModal" onclick="setMostRecentPostId()">
+                                    Deletar
+                                </button>
                                 <a href="#" class="card-title" style="text-decoration: none;" onclick="editTitle({{ post['id'] }})">
                                     <h5 id="title{{ loop.index }}" class="custom-card-title">{{ post['title'] }}</h5>
                                 </a>
@@ -84,18 +86,17 @@
                         </div>
                     </div>
                     {% endfor %}
-                    
+                                  
                             <!-- Botão para adicionar um novo post -->
                             <div class="col-md-2">
                                 <div class="text-center mt-4">
                                     <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addPostModal">
                                         Adicionar Produto
                                     </button>
-                                    <button type="button" class="btn btn-danger mt-2" data-toggle="modal" data-target="#removePostModal" onclick="setMostRecentPostId()">
-                                        Deletar
-                                    </button>
+                                    <!-- Use a margin class to add spacing between the buttons -->
+
                                 </div>
-                            </div>                           
+                            </div>                                                 
                         </div>
                     </div>
                 </div>

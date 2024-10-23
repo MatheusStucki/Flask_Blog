@@ -5,7 +5,8 @@ CREATE TABLE posts (
     title VARCHAR(255) NOT NULL,
     quantity INTEGER DEFAULT 0,
     image_url TEXT,
-    max_quantity INTEGER DEFAULT 0
+    max_quantity INTEGER DEFAULT 0,
+    is_deleted BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE recent_changes (
@@ -17,6 +18,6 @@ CREATE TABLE recent_changes (
 CREATE TABLE settings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     site_name VARCHAR(255) NOT NULL UNIQUE,
-    pfp_path TEXT DEFAULT 'uploads/placeholder.jpeg' -- Store PFP path directly here
+    pfp_path TEXT DEFAULT 'uploads/placeholder.jpeg'
 );
 

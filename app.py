@@ -44,7 +44,7 @@ def get_post(post_id):
 @app.route('/')
 def index():
     conn = get_db_connection()
-    posts = conn.execute('SELECT * FROM posts').fetchall()
+    posts = conn.execute('SELECT * FROM posts WHERE is_deleted = FALSE').fetchall()
     recent_changes = conn.execute('SELECT * FROM recent_changes ORDER BY timestamp DESC LIMIT 20').fetchall()
     settings = conn.execute('SELECT * FROM settings WHERE id = 1').fetchone()
     conn.close()
@@ -78,18 +78,15 @@ def add_post():
 
     return redirect(url_for('index'))
 
-@app.route('/delete_post', methods=['POST'])
+@app.route('/delete', methods=['POST'])
 def delete_post():
+    post_id = request.form['post_id']
+
     conn = get_db_connection()
+
+    # Soft delete: set is_deleted to TRUE instead of actually deleting the row
+    conn.execute('UPDATE posts SET is_deleted = TRUE WHERE id = ?', (post_id,))
     
-    # Get the post ID from the form
-    post_id = request.form.get('post_id')
-    
-    if not post_id:
-        return "Post ID is required!", 400
-    
-    # Delete the post with the given ID
-    conn.execute('DELETE FROM posts WHERE id = ?', (post_id,))
     conn.commit()
     conn.close()
 
@@ -122,7 +119,7 @@ def update_quantity(post_id, quantity):
     conn.commit()
 
     # Log the change
-    log_change(f"Product '{post['title']}' quantity updated to {quantity}")
+    log_change(f"Produto'{post['title']}' quantia em estoque: {quantity}")
 
     conn.close()
 
@@ -175,7 +172,7 @@ def update_site_name():
     site_name = data.get('site_name')
 
     conn = get_db_connection()
-    conn.execute('UPDATE settings SET site_name = ? WHERE id = 1', (site_name,))  # Assuming there is only one settings record
+    conn.execute('UPDATE settings SET site_name = ? WHERE id = 1', (site_name,)) 
     conn.commit()
     conn.close()
 
@@ -198,7 +195,7 @@ def upload_profile_image():
         # Save the path in the database
         conn = get_db_connection()
         relative_path = f'uploads/{filename}'
-        conn.execute('UPDATE settings SET pfp_path = ? WHERE id = 1', ((relative_path,)))  # Assuming there is only one settings record
+        conn.execute('UPDATE settings SET pfp_path = ? WHERE id = 1', ((relative_path,)))  
         conn.commit()
         conn.close()
 
@@ -213,4 +210,7 @@ def post(post_id):
     return render_template('post.html', post=post)
 
 if __name__ == '__main__':
-    app.run()
+    try:
+        app.run()
+    except Exception as e:
+        print(e)

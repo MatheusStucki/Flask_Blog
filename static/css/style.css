@@ -10,7 +10,7 @@ h1 {
     max-width: 250px; /* Largura fixa do card */
     margin: 5px auto; /* Ajusta a margem superior e inferior para 5px */
     padding: 10px; /* Preenchimento ao redor do conteúdo */
-    height: 300px; /* Altura fixa para todos os cards */
+    height: 350px; /* Altura fixa para todos os cards */
     display: flex;
     flex-direction: column;
     justify-content: center; /* Center content vertically */
